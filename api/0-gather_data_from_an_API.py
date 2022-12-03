@@ -2,43 +2,28 @@
 """
 Module 0-gather_data_from_an_API
 """
-import json
-import requests
-from sys import argv
-
-
 if __name__ == "__main__":
+    import requests
+    import sys
 
-    res = requests.get(
-        "https://jsonplaceholder.typicode.com/todos/?userId={}".format(argv[1])
-    )
-    tsks = json.loads(res.text)
-    usrs = requests.get("https://jsonplaceholder.typicode.com/users")
-    us = json.loads(usrs.text)
-    res_us = {}
-    counter = 0
-    counter_tsks = 0
-    nid = int(argv[1])
+    user_id = sys.argv[1]
+    url_employee = "https://jsonplaceholder.typicode.com/users/{}"\
+        .format(user_id)
+    url_todo = "https://jsonplaceholder.typicode.com/todos?userId={}"\
+        .format(user_id)
+    req_employee = requests.get(url_employee)
+    EN = req_employee.json().get('name')
+    req_todo = requests.get(url_todo)
+    TOTAL_T = len(req_todo.json())
+    TASKS = 0
+    NUMT = 0
+    lists = []
+    while TASKS < TOTAL_T:
+        if req_todo.json()[TASKS].get('completed') is True:
+            lists.append(req_todo.json()[TASKS].get('title'))
+            NUMT += 1
+        TASKS += 1
 
-    for line in us:
-        counter += 1
-        res_us.update(line)
-        if counter == nid:
-            break
-    name_us = res_us["name"]
-
-    my_tsks = [
-        (i["completed"], i["title"]) for i in tsks
-        if "completed" or "title" in i
-    ]
-
-    for i, j in my_tsks:
-        if i is True:
-            counter_tsks += 1
-
-    print("Employee {} is done with tasks({}/20):"
-          .format(name_us, counter_tsks))
-
-    for i, j in my_tsks:
-        if i is True:
-            print("\t {}".format(j))
+    print("Employee {} is done with tasks({}/{}):".format(EN, NUMT, TOTAL_T))
+    for t in lists:
+        print("\t {}".format(t))
