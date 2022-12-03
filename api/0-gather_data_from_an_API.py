@@ -1,41 +1,44 @@
 #!/usr/bin/python3
 """
-A script that, for a given employee ID, returns
-information about his/her TODO list progress.
+Module 0-gather_data_from_an_API
 """
+import json
+import requests
+from sys import argv
 
 
 if __name__ == "__main__":
-    import requests
-    from sys import argv
 
-    num = argv[1]
+    res = requests.get(
+        "https://jsonplaceholder.typicode.com/todos/?userId={}".format(argv[1])
+    )
+    tsks = json.loads(res.text)
+    usrs = requests.get("https://jsonplaceholder.typicode.com/users")
+    us = json.loads(usrs.text)
+    res_us = {}
+    counter = 0
+    counter_tsks = 0
+    nid = int(argv[1])
 
-    user_query = {'id': num}
-    response_1 = requests.get("https://jsonplaceholder.typicode.com/users",
-                              params=user_query)  # endpoint URL
+    for line in us:
+        counter += 1
+        res_us.update(line)
+        if counter == nid:
+            break
+    name_us = res_us["name"]
 
-    todo_query = {'userId': num}
-    response_2 = requests.get("https://jsonplaceholder.typicode.com/todos",
-                              params=todo_query)
+    my_tsks = [
+        (i["completed"], i["title"]) for i in tsks
+        if "completed" or "title" in i
+    ]
 
-    user = response_1.json()
+    for i, j in my_tsks:
+        if i is True:
+            counter_tsks += 1
 
-    todo_list = response_2.json()
+    print("Employee {} is done with tasks({}/20):"
+          .format(name_us, counter_tsks))
 
-    employee_name = user[0].get('name')
-
-    completed_tasks = 0
-    total_tasks = 0
-    completed_task_title = []
-
-    for task in todo_list:
-        if task.get('completed') is True:
-            completed_task_title.append(task.get('title'))
-            completed_tasks += 1
-        total_tasks += 1
-
-    print("Employee {} is done with tasks({}/{}):"
-          .format(employee_name, completed_tasks, total_tasks))
-    for title in completed_task_title:
-        print("{} {}".format('\t', title))
+    for i, j in my_tsks:
+        if i is True:
+            print("\t {}".format(j))
